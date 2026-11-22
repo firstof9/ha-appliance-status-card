@@ -944,4 +944,28 @@ export const styles = css`
   [data-tooltip][data-tooltip-pos="right"]:focus-visible::before {
     transform: translateY(-50%) translateX(0);
   }
+
+  /* Coffee maker: the card surface is always dark, so keep the status text legible
+     in light and dark HA themes instead of inheriting --secondary-text-color. */
+  .coffee_maker .job-icon-container {
+    top: 36%;
+    left: 76%;
+    width: 38%;
+  }
+  .coffee_maker .job-icon {
+    width: 46%;
+  }
+  .coffee_maker .job-label {
+    margin-top: 4px;
+    opacity: 1;
+    color: #e6e6e6;
+    font-size: clamp(10px, 2.6vw, 13px);
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .coffee_maker .job-icon-container.active .job-label {
+    color: var(--accent-color, #ff9800);
+  }
 `;

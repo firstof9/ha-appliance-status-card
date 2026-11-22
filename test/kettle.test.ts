@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import '../src/appliance-card';
 import { ApplianceCard } from '../src/appliance-card';
+import { ApplianceCardEditor } from '../src/editor';
 import { mockHass } from './mocks';
 import { HomeAssistant } from '../src/types';
 import { ASSETS } from '../src/assets';
@@ -96,5 +97,38 @@ describe('Kettle', () => {
     await element.updateComplete;
 
     expect(element.shadowRoot?.querySelector('.job-icon-container.active')).toBeNull();
+  });
+});
+
+
+describe('Coffee maker', () => {
+  it('renders a mapped coffee stage from the configured machine status', async () => {
+    const card = document.createElement('appliance-card') as ApplianceCard;
+    document.body.appendChild(card);
+    card.setConfig({ type: 'custom:appliance-card', appliance_type: 'coffee_maker', machine_state_entity: 'sensor.machine_status', stage_map: { Off: 'idle', Brewing: 'coffee' } });
+    card.hass = { ...mockHass, states: { ...mockHass.states, 'sensor.machine_status': { entity_id: 'sensor.machine_status', state: 'Brewing', attributes: {}, last_changed: '2026-05-12T16:00:00Z', last_updated: '2026-05-12T16:00:00Z', context: { id: 'c1', parent_id: null, user_id: null } } } } as HomeAssistant;
+    await card.updateComplete;
+    expect(card.shadowRoot?.querySelector('.job-icon-container.active')).toBeTruthy();
+    expect(card.shadowRoot?.querySelector('.microwave-controls')).toBeNull();
+  });
+
+  it('autofills only supported DeLonghi status, power, and blocking-alert mappings', () => {
+    const editor = document.createElement('appliance-card-editor') as ApplianceCardEditor;
+    editor.hass = { ...mockHass, entities: {
+      'sensor.machine_machine_status': { device_id: 'coffee1' },
+      'switch.machine_power': { device_id: 'coffee1' },
+      'sensor.machine_blocking_alarms': { device_id: 'coffee1' },
+      'button.machine_brew_espresso': { device_id: 'coffee1' },
+    }, states: {
+      'sensor.machine_machine_status': { state: 'Off', attributes: { friendly_name: 'Coffee Machine Machine Status' } },
+      'switch.machine_power': { state: 'off', attributes: { friendly_name: 'Coffee Machine Power' } },
+      'sensor.machine_blocking_alarms': { state: '0', attributes: { friendly_name: 'Coffee Machine Blocking Alarms' } },
+      'button.machine_brew_espresso': { state: 'unavailable', attributes: { friendly_name: 'Coffee Machine Brew Espresso' } },
+    } } as any;
+    const result = (editor as any)._autofillConfig({ type: 'custom:appliance-card', device_id: 'coffee1', appliance_type: 'coffee_maker' });
+    expect(result.machine_state_entity).toBe('sensor.machine_machine_status');
+    expect(result.power_entity).toBe('switch.machine_power');
+    expect(result.alarm_code_entity).toBe('sensor.machine_blocking_alarms');
+    expect(Object.keys(result).some((key) => key.includes('brew'))).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 # Appliance Card
 
-A custom Home Assistant card for tracking and controlling home appliances — refrigerators, microwaves, ovens, cooktops, dishwashers, washers, dryers and kettles — from SmartThings, LocalThings and others.
+A custom Home Assistant card for tracking and controlling home appliances — refrigerators, microwaves, ovens, cooktops, dishwashers, washers, dryers, kettles, and coffee makers — from SmartThings, LocalThings and others.
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=firstof9&repository=ha-appliance-status-card&category=plugin)
 
@@ -64,7 +64,7 @@ For manual YAML configuration:
 | --- | --- | --- | --- |
 | `type` | string | **Required** | `custom:appliance-card` (deprecated: `custom:smartthings-card`) |
 | `device_id` | string | **Optional** | The Home Assistant device ID. Used in the visual editor for automatic entity discovery. |
-| `appliance_type` | string | **Optional** | `microwave`, `oven`, `dishwasher`, `washer`, `dryer`, `refrigerator`, `cooktop`, `kettle`. Defaults to `microwave`. |
+| `appliance_type` | string | **Optional** | `microwave`, `oven`, `dishwasher`, `washer`, `dryer`, `refrigerator`, `cooktop`, `kettle`, `coffee_maker`. Defaults to `microwave`. |
 | `power_entity` | string | **Optional** | The entity ID for power state (switch or binary_sensor). |
 | `mode_entity` | string | **Optional** | The entity ID for the current appliance mode. |
 | `machine_state_entity` | string | **Optional** | The entity ID for the machine state. |
@@ -183,3 +183,24 @@ Images are generated via a build script into the `images/` directory of this rep
 1. Install dependencies: `npm install`
 2. Build the project: `npm run build`
 3. Watch for changes: `npm run build:watch`
+
+
+### Coffee makers (read-only status)
+
+`coffee_maker` reuses the card's status presentation. It does not expose brew, rinse, or power controls. With a selected device, the editor recognizes the `delonghi_coffee` integration and can autofill `machine_state_entity` from `_machine_status`, `power_entity` from `_power`, and `alarm_code_entity` from `_blocking_alarms`. Review the selected entities and provide explicit mappings when your integration uses different names. Example:
+
+```yaml
+type: custom:appliance-card
+appliance_type: coffee_maker
+device_id: YOUR_DEVICE_ID
+machine_state_entity: sensor.your_machine_status
+power_entity: switch.your_machine_power
+alarm_code_entity: sensor.your_machine_blocking_alarms
+stage_map:
+  Off: idle
+  Brewing: coffee
+```
+
+The card shows the integration's own status text (Ready, Off, Rinsing, Unavailable, Unknown). A missing or unset status entity reads "Not found" or "Not configured", never Off or Ready. Brewing and milk stages use the coffee icon, heating and hot water use the boil icon, and `espresso` has its own icon; all are bundled, so no files need to be copied into `www/`. Autofill only binds entities registered to the selected device.
+
+Do not map unavailable or unknown states to ready. Integration state meanings vary; verify the exact state tokens before configuring `stage_map`.

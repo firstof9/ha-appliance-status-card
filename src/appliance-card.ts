@@ -329,10 +329,12 @@ export class ApplianceCard extends LitElement {
               : ''}
             <div class="timer-section">
               ${this._renderSecondaryIcons()}
-              <div class="timer-row">
-                <div class="time-bg">88:88:88</div>
-                <div class="time-fg">${timeState}</div>
-              </div>
+              ${this.config.appliance_type === 'coffee_maker' && !this.config.time_entity
+                ? ''
+                : html`<div class="timer-row">
+                    <div class="time-bg">88:88:88</div>
+                    <div class="time-fg">${timeState}</div>
+                  </div>`}
             </div>
             ${this.config.appliance_type === 'microwave' ? this._renderMicrowaveControls() : ''}
           </div>
@@ -607,6 +609,14 @@ export class ApplianceCard extends LitElement {
         { name: 'others', left: '65%', icon: 'cooking' },
         { name: 'cooking', left: '65%', icon: 'cooking' },
       ],
+      coffee_maker: [
+        { name: 'brewing', left: '65%', icon: 'coffee' },
+        { name: 'coffee', left: '65%', icon: 'coffee' },
+        { name: 'espresso', left: '65%', icon: 'espresso' },
+        { name: 'heating', left: '65%', icon: 'boil' },
+        { name: 'preparing', left: '65%', icon: 'coffee' },
+        { name: 'dispensing', left: '65%', icon: 'boil' },
+      ],
       kettle: [
         { name: 'boiling', left: '65%', icon: 'boil' },
         { name: 'boil', left: '65%', icon: 'boil' },
@@ -665,16 +675,27 @@ export class ApplianceCard extends LitElement {
       `;
     }
 
-    const labelText = isActive ? (activeStage.name === 'autocook' || activeStage.icon === 'autocook' ? '' : this._getStageLabel(activeStage.name)) : 'Idle';
+    let labelText = isActive ? (activeStage.name === 'autocook' || activeStage.icon === 'autocook' ? '' : this._getStageLabel(activeStage.name)) : 'Idle';
+    if (appliance === 'coffee_maker') {
+      // Show the integration's own status text (Ready, Off, Rinsing, Preparing milk,
+      // Unavailable...) rather than a blanket "Idle" or a stage name, so one state is
+      // never mistaken for another. A status entity that is missing or unset is
+      // reported as such and never rendered as Off or Ready.
+      const configured = [this.config.job_state_entity, this.config.machine_state_entity].filter(Boolean) as string[];
+      const present = this._templateResults['job_state_template'] !== undefined || configured.some((id) => this.hass.states[id]);
+      labelText = present
+        ? currentMode.charAt(0).toUpperCase() + currentMode.slice(1)
+        : configured.length ? 'Not found' : 'Not configured';
+    }
 
     // Centered single icon for microwave/oven
     return html`
       <div class="job-states">
-        <div class="job-icon-container ${isActive ? 'active' : ''}" style="left: 50%; top: 45%"
+        <div class="job-icon-container ${isActive ? 'active' : ''}" style="${appliance === 'coffee_maker' ? '' : 'left: 50%; top: 45%'}"
           ?aria-current=${isActive ? 'step' : undefined}>
           <img class="job-icon" 
             src="${this._getAsset(appliance, iconName)}" 
-            alt="${isActive ? this._getStageLabel(activeStage.name) : 'Idle'}" />
+            alt="${isActive ? this._getStageLabel(activeStage.name) : labelText || 'Idle'}" />
           ${labelText ? html`<div class="job-label">${labelText}</div>` : ''}
         </div>
       </div>

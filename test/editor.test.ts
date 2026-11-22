@@ -36,6 +36,7 @@ describe('ApplianceCardEditor with LocalThings', () => {
       { integration: 'govee' },
       { integration: 'govee_ble' },
       { integration: 'mqtt' },
+      { integration: 'delonghi_coffee' },
     ]);
 
     const powerSchema = schema.find((s: any) => s.name === 'power_entity');
@@ -531,4 +532,13 @@ describe('ApplianceCardEditor with LocalThings', () => {
     expect(autofilled.job_state_entity).toBe('sensor.washing_machine_programme_progress');
     expect(autofilled.time_entity).toBe('sensor.washing_machine_remaining_time');
   });
+});
+
+
+it('offers coffee maker device mapping and alert fields', () => {
+  const editor = document.createElement('appliance-card-editor') as ApplianceCardEditor;
+  editor.setConfig({ type: 'custom:appliance-card', appliance_type: 'coffee_maker' });
+  const schema = (editor as any)._schema();
+  expect(schema.some((field: any) => field.name === 'machine_state_entity')).toBe(true);
+  expect(schema.some((field: any) => field.name === 'alarm_code_entity')).toBe(true);
 });

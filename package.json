@@ -1,7 +1,7 @@
 {
   "name": "ha-appliance-status-card",
   "version": "0.3.9",
-  "description": "A custom Home Assistant Lovelace card for tracking and controlling smart appliances (washers, dryers, dishwashers, refrigerators, ovens, cooktops, microwaves, and kettles).",
+  "description": "A custom Home Assistant Lovelace card for tracking and controlling smart appliances (washers, dryers, dishwashers, refrigerators, ovens, cooktops, microwaves, kettles, and coffee makers).",
   "keywords": [
     "home-assistant",
     "lovelace",
@@ -23,7 +23,8 @@
     "oven",
     "cooktop",
     "microwave",
-    "kettle"
+    "kettle",
+    "coffee_maker"
   ],
   "main": "appliance-card.js",
   "type": "module",
