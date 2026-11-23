@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appliance Card — Home Assistant Custom Card</title>
+  <meta name="description" content="Interactive demo and documentation for ha-appliance-status-card — a custom Home Assistant Lovelace card for smart appliances." />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181b24;
+      --surface-2: #222634;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #ff9800;
+      --accent-soft: rgba(255, 152, 0, 0.15);
+      --code-bg: #12141c;
+      --ha-card-background: #1c1c1c;
+      --card-background-color: #1c1c1c;
+      --primary-text-color: #ffffff;
+      --secondary-text-color: #9e9e9e;
+      --accent-color: #ff9800;
+      --divider-color: #333333;
+      --success-color: #4caf50;
+      --warning-color: #ff9800;
+      --error-color: #f44336;
+    }
+
+    [data-theme="light"] {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #eef1f7;
+      --border: rgba(0, 0, 0, 0.1);
+      --text: #111827;
+      --muted: #4b5563;
+      --code-bg: #f8fafc;
+      --ha-card-background: #ffffff;
+      --card-background-color: #ffffff;
+      --primary-text-color: #111827;
+      --secondary-text-color: #6b7280;
+      --divider-color: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+    }
+
+    .nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-block;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.92rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .btn:hover { border-color: var(--accent); text-decoration: none; }
+    .btn-primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
+    .btn-primary:hover { opacity: 0.92; }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    .hero {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.9rem, 4vw, 2.75rem);
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin: 0 0 1.25rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    section { margin-top: 3rem; }
+    section h2 {
+      font-size: 1.45rem;
+      margin: 0 0 1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .demo-shell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab {
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 1.1fr) minmax(280px, 0.9fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .demo-grid { grid-template-columns: 1fr; }
+    }
+
+    .preview-stage {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .state-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .state-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+    .pill {
+      padding: 0.28rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .pill.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    #card-mount {
+      width: 100%;
+    }
+
+    .yaml-panel {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .yaml-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    pre {
+      margin: 0;
+      padding: 0.9rem;
+      overflow-x: auto;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.15rem;
+    }
+
+    .info-card h3 { margin: 0 0 0.45rem; font-size: 1.02rem; }
+    .info-card p, .info-card ol { margin: 0; color: var(--muted); font-size: 0.92rem; }
+    .info-card ol { padding-left: 1.2rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.7rem 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th { background: var(--surface-2); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+
+    code {
+      background: var(--surface-2);
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      font-size: 0.86em;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.75rem 1.25rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand"><span class="brand-dot"></span> Appliance Card</div>
+      <div class="nav-links">
+        <a href="#demo">Live Demo</a>
+        <a href="#install">Install</a>
+        <a href="#integrations">Integrations</a>
+        <a href="https://github.com/firstof9/ha-appliance-status-card" target="_blank" rel="noopener">GitHub</a>
+        <button class="btn" id="theme-toggle" type="button">Light Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Appliance Status Card for Home Assistant</h1>
+      <p>Track and control washers, dryers, dishwashers, refrigerators, microwaves, ovens, cooktops, kettles, and coffee makers with a glassmorphic UI, live countdowns, and automatic entity discovery.</p>
+      <div class="hero-actions">
+        <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=firstof9&repository=ha-appliance-status-card&category=plugin" target="_blank" rel="noopener">
+          <img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in Home Assistant Marketplace" />
+        </a>
+        <a class="btn btn-primary" href="#demo">Try Interactive Demo</a>
+        <a class="btn" href="https://github.com/firstof9/ha-appliance-status-card/releases/latest" target="_blank" rel="noopener">Latest Release</a>
+      </div>
+    </div>
+
+    <section id="demo">
+      <h2>Interactive Live Demo</h2>
+      <div class="demo-shell">
+        <div class="tabs" id="appliance-tabs" role="tablist"></div>
+        <div class="demo-grid">
+          <div class="preview-stage">
+            <div class="state-controls">
+              <div class="state-pills" id="state-pills"></div>
+              <span style="font-size:0.78rem;color:var(--muted);">Rendered live by <code>&lt;appliance-card&gt;</code></span>
+            </div>
+            <div id="card-mount"></div>
+          </div>
+          <div class="yaml-panel">
+            <div class="yaml-header">
+              <span>Card YAML Configuration</span>
+              <button class="btn" id="copy-yaml" type="button" style="padding:0.25rem 0.6rem;font-size:0.78rem;">Copy</button>
+            </div>
+            <pre id="yaml-code"></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <h2>Installation</h2>
+      <div class="cards-grid">
+        <div class="info-card">
+          <h3>Marketplace (formerly HACS)</h3>
+          <ol>
+            <li>Click the Home Assistant badge above, or open <strong>Marketplace</strong> in Home Assistant.</li>
+            <li>Open the menu (three dots) &rarr; <strong>Custom repositories</strong>.</li>
+            <li>Add <code>https://github.com/firstof9/ha-appliance-status-card</code> as a <strong>Dashboard / Lovelace</strong> repository.</li>
+            <li>Click <strong>Install</strong> and add <code>custom:appliance-card</code> via the Visual Editor.</li>
+          </ol>
+        </div>
+        <div class="info-card">
+          <h3>Manual</h3>
+          <ol>
+            <li>Download <code>appliance-card.js</code> from the <a href="https://github.com/firstof9/ha-appliance-status-card/releases/latest" target="_blank" rel="noopener">latest release</a>.</li>
+            <li>Copy it to <code>&lt;config&gt;/www/appliance-card.js</code>.</li>
+            <li>Register <code>/local/appliance-card.js</code> as a JavaScript module under <strong>Settings &rarr; Dashboards &rarr; Resources</strong>.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="integrations">
+      <h2>Supported Integrations</h2>
+      <table>
+        <thead>
+          <tr><th>Integration</th><th>Domain / ID</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>SmartThings</strong></td><td><code>smartthings</code></td><td>Core Home Assistant SmartThings integration</td></tr>
+          <tr><td><strong>LocalThings</strong></td><td><code>localthings</code></td><td>Local SmartThings integration</td></tr>
+          <tr><td><strong>Govee</strong></td><td><code>govee</code>, <code>govee_ble</code></td><td>Govee Home / Govee BLE integrations</td></tr>
+          <tr><td><strong>GE Home</strong></td><td><code>ge_home</code></td><td>GE Appliances / Café integration</td></tr>
+          <tr><td><strong>Home Connect</strong></td><td><code>home_connect</code>, <code>home_connect_alt</code>, <code>homeconnect</code>, <code>homeconnect_ws</code></td><td>Core &amp; custom Bosch / Siemens Home Connect integrations</td></tr>
+          <tr><td><strong>LG ThinQ</strong></td><td><code>lg_thinq</code></td><td>Core Home Assistant LG ThinQ integration</td></tr>
+          <tr><td><strong>SmartThinQ LGE Sensors</strong></td><td><code>smartthinq_sensors</code></td><td>Custom LG ThinQ integration</td></tr>
+          <tr><td><strong>De'Longhi Coffee</strong></td><td><code>delonghi_coffee</code></td><td>De'Longhi coffee maker integration (read-only status)</td></tr>
+          <tr><td><strong>Breville+</strong></td><td><code>breville_cooking</code></td><td>Breville+ smart oven integration (read-only status)</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <a href="https://github.com/firstof9/ha-appliance-status-card" target="_blank" rel="noopener">firstof9/ha-appliance-status-card</a> &middot; MIT License
+  </footer>
+
+  <script>
+    // Lightweight Home Assistant element shims for standalone GitHub Pages preview
+    if (!customElements.get('ha-card')) {
+      customElements.define('ha-card', class extends HTMLElement {
+        connectedCallback() {
+          this.style.display = 'block';
+          this.style.borderRadius = '12px';
+          this.style.overflow = 'hidden';
+          this.style.background = 'var(--ha-card-background, #1c1c1c)';
+        }
+      });
+    }
+    if (!customElements.get('ha-icon')) {
+      customElements.define('ha-icon', class extends HTMLElement {
+        static get observedAttributes() { return ['icon']; }
+        connectedCallback() { this._render(); }
+        attributeChangedCallback() { this._render(); }
+        _render() {
+          const icon = this.getAttribute('icon') || '';
+          const map = {
+            'mdi:wifi': '📶', 'mdi:wifi-off': '📵', 'mdi:lock': '🔒', 'mdi:lock-open': '🔓',
+            'mdi:fan': '🌀', 'mdi:lightbulb': '💡', 'mdi:lightbulb-outline': '💡',
+            'mdi:snowflake': '❄️', 'mdi:water': '💧', 'mdi:alert': '⚠️'
+          };
+          this.textContent = map[icon] || '●';
+          this.style.display = 'inline-flex';
+          this.style.alignItems = 'center';
+          this.style.justifyContent = 'center';
+          this.style.fontSize = '14px';
+        }
+      });
+    }
+  </script>
+
+  <script type="module">
+    const loadCard = async () => {
+      try {
+        await import('./appliance-card.js');
+      } catch {
+        await import('../appliance-card.js');
+      }
+    };
+
+    const futureIso = (minutes) => new Date(Date.now() + minutes * 60000).toISOString();
+
+    const PRESETS = [
+      {
+        id: 'washer',
+        label: 'Washer',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'washer',
+          power_entity: 'switch.washer_power',
+          machine_state_entity: 'sensor.washer_machine_state',
+          job_state_entity: 'sensor.washer_job_state',
+          time_entity: 'sensor.washer_completion_time',
+          wifi_entity: 'binary_sensor.washer_wifi',
+          lock_entity: 'binary_sensor.washer_child_lock'
+        },
+        states: {
+          Running: {
+            'switch.washer_power': { state: 'on', attributes: {} },
+            'sensor.washer_machine_state': { state: 'run', attributes: {} },
+            'sensor.washer_job_state': { state: 'wash', attributes: {} },
+            'sensor.washer_completion_time': { state: futureIso(42), attributes: {} },
+            'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
+            'binary_sensor.washer_child_lock': { state: 'off', attributes: {} }
+          },
+          Spinning: {
+            'switch.washer_power': { state: 'on', attributes: {} },
+            'sensor.washer_machine_state': { state: 'run', attributes: {} },
+            'sensor.washer_job_state': { state: 'spin', attributes: {} },
+            'sensor.washer_completion_time': { state: futureIso(8), attributes: {} },
+            'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
+            'binary_sensor.washer_child_lock': { state: 'on', attributes: {} }
+          },
+          Idle: {
+            'switch.washer_power': { state: 'off', attributes: {} },
+            'sensor.washer_machine_state': { state: 'stop', attributes: {} },
+            'sensor.washer_job_state': { state: 'none', attributes: {} },
+            'sensor.washer_completion_time': { state: 'unavailable', attributes: {} },
+            'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
+            'binary_sensor.washer_child_lock': { state: 'off', attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'dryer',
+        label: 'Dryer',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'dryer',
+          power_entity: 'switch.dryer_power',
+          machine_state_entity: 'sensor.dryer_machine_state',
+          job_state_entity: 'sensor.dryer_job_state',
+          time_entity: 'sensor.dryer_completion_time'
+        },
+        states: {
+          Drying: {
+            'switch.dryer_power': { state: 'on', attributes: {} },
+            'sensor.dryer_machine_state': { state: 'run', attributes: {} },
+            'sensor.dryer_job_state': { state: 'drying', attributes: {} },
+            'sensor.dryer_completion_time': { state: futureIso(55), attributes: {} }
+          },
+          Cooling: {
+            'switch.dryer_power': { state: 'on', attributes: {} },
+            'sensor.dryer_machine_state': { state: 'run', attributes: {} },
+            'sensor.dryer_job_state': { state: 'cooling', attributes: {} },
+            'sensor.dryer_completion_time': { state: futureIso(5), attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'dishwasher',
+        label: 'Dishwasher',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'dishwasher',
+          power_entity: 'switch.dishwasher_power',
+          machine_state_entity: 'sensor.dishwasher_machine_state',
+          job_state_entity: 'sensor.dishwasher_job_state',
+          time_entity: 'sensor.dishwasher_completion_time'
+        },
+        states: {
+          Washing: {
+            'switch.dishwasher_power': { state: 'on', attributes: {} },
+            'sensor.dishwasher_machine_state': { state: 'run', attributes: {} },
+            'sensor.dishwasher_job_state': { state: 'wash', attributes: {} },
+            'sensor.dishwasher_completion_time': { state: futureIso(75), attributes: {} }
+          },
+          Drying: {
+            'switch.dishwasher_power': { state: 'on', attributes: {} },
+            'sensor.dishwasher_machine_state': { state: 'run', attributes: {} },
+            'sensor.dishwasher_job_state': { state: 'dry', attributes: {} },
+            'sensor.dishwasher_completion_time': { state: futureIso(18), attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'refrigerator',
+        label: 'Refrigerator',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'refrigerator',
+          fridge_temp_entity: 'sensor.fridge_temperature',
+          freezer_temp_entity: 'sensor.freezer_temperature',
+          door_entities: ['binary_sensor.fridge_cooler_door', 'binary_sensor.fridge_freezer_door'],
+          ice_maker_entity: 'switch.fridge_ice_maker',
+          filter_status_entity: 'sensor.fridge_filter_status'
+        },
+        states: {
+          Normal: {
+            'sensor.fridge_temperature': { state: '37', attributes: { unit_of_measurement: '°F' } },
+            'sensor.freezer_temperature': { state: '0', attributes: { unit_of_measurement: '°F' } },
+            'binary_sensor.fridge_cooler_door': { state: 'off', attributes: {} },
+            'binary_sensor.fridge_freezer_door': { state: 'off', attributes: {} },
+            'switch.fridge_ice_maker': { state: 'on', attributes: {} },
+            'sensor.fridge_filter_status': { state: '25', attributes: { unit_of_measurement: '%' } }
+          },
+          'Door Open': {
+            'sensor.fridge_temperature': { state: '40', attributes: { unit_of_measurement: '°F' } },
+            'sensor.freezer_temperature': { state: '2', attributes: { unit_of_measurement: '°F' } },
+            'binary_sensor.fridge_cooler_door': { state: 'on', attributes: {} },
+            'binary_sensor.fridge_freezer_door': { state: 'off', attributes: {} },
+            'switch.fridge_ice_maker': { state: 'on', attributes: {} },
+            'sensor.fridge_filter_status': { state: '88', attributes: { unit_of_measurement: '%' } }
+          }
+        }
+      },
+      {
+        id: 'microwave',
+        label: 'Microwave',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'microwave',
+          power_entity: 'switch.microwave_power',
+          mode_entity: 'sensor.microwave_mode',
+          time_entity: 'sensor.microwave_time_remaining',
+          fan_entity: 'fan.microwave_hood_fan',
+          light_entity: 'light.microwave_hood_light'
+        },
+        states: {
+          Heating: {
+            'switch.microwave_power': { state: 'on', attributes: {} },
+            'sensor.microwave_mode': { state: 'microwave', attributes: {} },
+            'sensor.microwave_time_remaining': { state: '95', attributes: { unit_of_measurement: 's' } },
+            'fan.microwave_hood_fan': { state: 'on', attributes: { percentage: 50 } },
+            'light.microwave_hood_light': { state: 'on', attributes: {} }
+          },
+          Idle: {
+            'switch.microwave_power': { state: 'off', attributes: {} },
+            'sensor.microwave_mode': { state: 'none', attributes: {} },
+            'sensor.microwave_time_remaining': { state: '0', attributes: { unit_of_measurement: 's' } },
+            'fan.microwave_hood_fan': { state: 'off', attributes: { percentage: 0 } },
+            'light.microwave_hood_light': { state: 'off', attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'breville',
+        label: 'Breville+ Oven',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'oven',
+          breville_status_entity: 'sensor.breville_oven_status',
+          temperature_entity: 'sensor.breville_oven_temperature',
+          target_temperature_entity: 'number.breville_oven_target_temperature',
+          mode_entity: 'sensor.breville_oven_active_mode',
+          time_entity: 'sensor.breville_oven_time_remaining',
+          door_entity: 'binary_sensor.breville_oven_door'
+        },
+        states: {
+          'Cooking + Door Open': {
+            'sensor.breville_oven_status': { state: 'cooking', attributes: {} },
+            'sensor.breville_oven_temperature': { state: '375', attributes: { unit_of_measurement: '°F' } },
+            'number.breville_oven_target_temperature': { state: '400', attributes: { unit_of_measurement: '°F' } },
+            'sensor.breville_oven_active_mode': { state: 'air_fry', attributes: {} },
+            'sensor.breville_oven_time_remaining': { state: '14', attributes: { unit_of_measurement: 'min' } },
+            'binary_sensor.breville_oven_door': { state: 'on', attributes: {} }
+          },
+          Preheating: {
+            'sensor.breville_oven_status': { state: 'preheating', attributes: {} },
+            'sensor.breville_oven_temperature': { state: '210', attributes: { unit_of_measurement: '°F' } },
+            'number.breville_oven_target_temperature': { state: '350', attributes: { unit_of_measurement: '°F' } },
+            'sensor.breville_oven_active_mode': { state: 'bake', attributes: {} },
+            'sensor.breville_oven_time_remaining': { state: '25', attributes: { unit_of_measurement: 'min' } },
+            'binary_sensor.breville_oven_door': { state: 'off', attributes: {} }
+          },
+          Offline: {
+            'sensor.breville_oven_status': { state: 'offline', attributes: {} },
+            'sensor.breville_oven_temperature': { state: '210', attributes: { unit_of_measurement: '°F' } },
+            'number.breville_oven_target_temperature': { state: '350', attributes: { unit_of_measurement: '°F' } },
+            'binary_sensor.breville_oven_door': { state: 'on', attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'cooktop',
+        label: 'Cooktop',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'cooktop',
+          burner_left_front_on_entity: 'binary_sensor.cooktop_lf_on',
+          burner_left_front_power_entity: 'sensor.cooktop_lf_power',
+          burner_right_front_on_entity: 'binary_sensor.cooktop_rf_on',
+          burner_right_front_power_entity: 'sensor.cooktop_rf_power'
+        },
+        states: {
+          Active: {
+            'binary_sensor.cooktop_lf_on': { state: 'on', attributes: {} },
+            'sensor.cooktop_lf_power': { state: '80', attributes: {} },
+            'binary_sensor.cooktop_rf_on': { state: 'on', attributes: {} },
+            'sensor.cooktop_rf_power': { state: '35', attributes: {} }
+          },
+          Off: {
+            'binary_sensor.cooktop_lf_on': { state: 'off', attributes: {} },
+            'sensor.cooktop_lf_power': { state: '0', attributes: {} },
+            'binary_sensor.cooktop_rf_on': { state: 'off', attributes: {} },
+            'sensor.cooktop_rf_power': { state: '0', attributes: {} }
+          }
+        }
+      },
+      {
+        id: 'kettle',
+        label: 'Kettle',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'kettle',
+          power_entity: 'switch.kettle_power',
+          job_state_entity: 'sensor.kettle_state',
+          temperature_entity: 'sensor.kettle_temperature'
+        },
+        states: {
+          Boiling: {
+            'switch.kettle_power': { state: 'on', attributes: {} },
+            'sensor.kettle_state': { state: 'boil', attributes: {} },
+            'sensor.kettle_temperature': { state: '205', attributes: { unit_of_measurement: '°F' } }
+          },
+          Idle: {
+            'switch.kettle_power': { state: 'off', attributes: {} },
+            'sensor.kettle_state': { state: 'idle', attributes: {} },
+            'sensor.kettle_temperature': { state: '72', attributes: { unit_of_measurement: '°F' } }
+          }
+        }
+      },
+      {
+        id: 'coffee_maker',
+        label: 'Coffee Maker',
+        config: {
+          type: 'custom:appliance-card',
+          appliance_type: 'coffee_maker',
+          power_entity: 'switch.coffee_power',
+          machine_state_entity: 'sensor.coffee_status',
+          stage_map: { Off: 'idle', Brewing: 'coffee' }
+        },
+        states: {
+          Brewing: {
+            'switch.coffee_power': { state: 'on', attributes: {} },
+            'sensor.coffee_status': { state: 'Brewing', attributes: {} }
+          },
+          Ready: {
+            'switch.coffee_power': { state: 'on', attributes: {} },
+            'sensor.coffee_status': { state: 'Ready', attributes: {} }
+          }
+        }
+      }
+    ];
+
+    const toYaml = (obj, indent = 0) => {
+      const pad = ' '.repeat(indent);
+      return Object.entries(obj).map(([k, v]) => {
+        if (Array.isArray(v)) {
+          return `${pad}${k}:\n` + v.map(item => `${pad}  - ${item}`).join('\n');
+        }
+        if (v && typeof v === 'object') {
+          return `${pad}${k}:\n` + toYaml(v, indent + 2);
+        }
+        return `${pad}${k}: ${v}`;
+      }).join('\n');
+    };
+
+    await loadCard();
+
+    const tabsEl = document.getElementById('appliance-tabs');
+    const pillsEl = document.getElementById('state-pills');
+    const mountEl = document.getElementById('card-mount');
+    const yamlEl = document.getElementById('yaml-code');
+
+    let currentPreset = PRESETS[0];
+    let currentStateName = Object.keys(currentPreset.states)[0];
+
+    const renderCard = () => {
+      mountEl.innerHTML = '';
+      const card = document.createElement('appliance-card');
+      card.setConfig(currentPreset.config);
+      card.hass = {
+        states: currentPreset.states[currentStateName],
+        callService: () => Promise.resolve(),
+        localize: (k) => k
+      };
+      mountEl.appendChild(card);
+      yamlEl.textContent = toYaml(currentPreset.config);
+    };
+
+    const renderPills = () => {
+      pillsEl.innerHTML = '';
+      Object.keys(currentPreset.states).forEach((name) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pill' + (name === currentStateName ? ' active' : '');
+        btn.textContent = name;
+        btn.onclick = () => {
+          currentStateName = name;
+          renderPills();
+          renderCard();
+        };
+        pillsEl.appendChild(btn);
+      });
+    };
+
+    const renderTabs = () => {
+      tabsEl.innerHTML = '';
+      PRESETS.forEach((preset) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tab' + (preset.id === currentPreset.id ? ' active' : '');
+        btn.textContent = preset.label;
+        btn.onclick = () => {
+          currentPreset = preset;
+          currentStateName = Object.keys(preset.states)[0];
+          renderTabs();
+          renderPills();
+          renderCard();
+        };
+        tabsEl.appendChild(btn);
+      });
+    };
+
+    document.getElementById('copy-yaml').onclick = async (e) => {
+      await navigator.clipboard.writeText(yamlEl.textContent);
+      e.target.textContent = 'Copied!';
+      setTimeout(() => (e.target.textContent = 'Copy'), 1500);
+    };
+
+    document.getElementById('theme-toggle').onclick = (e) => {
+      const html = document.documentElement;
+      const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      e.target.textContent = next === 'dark' ? 'Light Theme' : 'Dark Theme';
+    };
+
+    renderTabs();
+    renderPills();
+    renderCard();
+  </script>
+</body>
+</html>
