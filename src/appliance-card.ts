@@ -324,14 +324,44 @@ export class ApplianceCard extends LitElement {
       const activeStatus = Boolean(brevilleStatus && ['preheating', 'ready', 'cooking', 'keeping_warm'].includes(brevilleStatus));
       const doorOpen = meaningfulStatus && doorObj?.state === 'on';
       const mode = modeStateObj?.state;
-      const formatTemperature = (stateObj: any) => {
+      const parseTemperature = (stateObj: any) => {
         const value = stateObj?.state;
-        return meaningfulStatus && value && Number.isFinite(Number(value))
-          ? `${value} ${stateObj?.attributes?.unit_of_measurement || ''}`.trim()
-          : '—';
+        if (meaningfulStatus && value && Number.isFinite(Number(value))) {
+          return {
+            digits: String(Math.round(Number(value))).padStart(3, ' '),
+            unit: stateObj?.attributes?.unit_of_measurement || '',
+          };
+        }
+        return { digits: '---', unit: '' };
       };
+      const currentTemp = parseTemperature(tempStateObj);
+      const targetTemp = parseTemperature(targetTempObj);
       const validMode = meaningfulStatus && mode && !['unknown', 'unavailable', 'missing'].includes(mode.toLowerCase());
       const validTime = activeStatus && timeState !== '--:--:--';
+      const brevilleModeIconMap: Record<string, string> = {
+        air_fry: 'hot_blast',
+        bake: 'bake',
+        roast: 'convection',
+        convection: 'convection',
+        convection_bake: 'convection',
+        convection_roast: 'convection',
+        broil: 'grill',
+        grill: 'grill',
+        toast: 'grill',
+        bagel: 'grill',
+        steam: 'steam',
+        conventional: 'conventional',
+        pizza: 'bake',
+        reheat: 'cooking',
+        warm: 'cooking',
+        keep_warm: 'cooking',
+        slow_cook: 'bake',
+        proof: 'cooking',
+        dehydrate: 'convection',
+      };
+      const normalizedMode = validMode ? mode.toLowerCase().replace(/[\s-]+/g, '_') : '';
+      const modeIconKey = brevilleModeIconMap[normalizedMode] || 'cooking';
+      const brevilleModeImg = getAsset('oven', `${modeIconKey}${activeStatus ? '-on' : ''}.png`);
       return html`
         <ha-card>
           <div class="container oven breville-oven">
@@ -340,12 +370,45 @@ export class ApplianceCard extends LitElement {
               <img class="appliance-img" src="${applianceImg}" alt="Breville smart oven" />
               ${doorOpen ? html`<div class="breville-door-overlay" aria-hidden="true"></div>` : ''}
             </div>
-            <div class="breville-readout" aria-label="Breville oven status">
-              <div class="breville-status">${brevilleStatusLabel}</div>
-              ${validMode ? html`<div class="breville-mode">${mode}</div>` : ''}
-              ${doorOpen ? html`<div class="breville-door-warning" role="status">Door open</div>` : ''}
-              ${meaningfulStatus ? html`<div class="breville-temperature"><span class="breville-current-temp">Current ${formatTemperature(tempStateObj)}</span>${brevilleStatus !== 'idle' ? html`<span class="breville-target-temp">Target ${formatTemperature(targetTempObj)}</span>` : ''}</div>` : ''}
-              ${validTime ? html`<div class="breville-time">${timeState} remaining</div>` : ''}
+            ${meaningfulStatus ? html`
+              <div class="breville-mode-icon ${activeStatus ? 'active' : ''}" data-tooltip="${validMode ? mode.replace(/_/g, ' ') : brevilleStatusLabel}">
+                <img src="${brevilleModeImg}" alt="${validMode ? mode.replace(/_/g, ' ') : brevilleStatusLabel}" />
+                ${validMode ? html`<div class="breville-mode">${mode.replace(/_/g, ' ')}</div>` : ''}
+              </div>
+            ` : ''}
+            <div class="breville-readout right-panel" aria-label="Breville oven status">
+              <div class="breville-header">
+                <div class="breville-status">${brevilleStatusLabel}</div>
+                ${doorOpen ? html`<div class="breville-door-warning" role="status">Door open</div>` : ''}
+              </div>
+              ${meaningfulStatus ? html`
+                <div class="breville-temperature">
+                  <div class="breville-temp-box breville-current-temp">
+                    <span class="breville-temp-label">Current</span>
+                    <div class="temp-row breville-temp-row">
+                      <div class="temp-bg">888</div>
+                      <div class="temp-fg"><span>${currentTemp.digits}</span> <span class="temp-unit">${currentTemp.unit}</span></div>
+                    </div>
+                  </div>
+                  ${brevilleStatus !== 'idle' ? html`
+                    <div class="breville-temp-box breville-target-temp">
+                      <span class="breville-temp-label">Target</span>
+                      <div class="temp-row breville-temp-row">
+                        <div class="temp-bg">888</div>
+                        <div class="temp-fg"><span>${targetTemp.digits}</span> <span class="temp-unit">${targetTemp.unit}</span></div>
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              ` : ''}
+              ${validTime ? html`
+                <div class="timer-section breville-time">
+                  <div class="timer-row">
+                    <div class="time-bg">88:88:88</div>
+                    <div class="time-fg">${timeState}</div>
+                  </div>
+                </div>
+              ` : ''}
             </div>
           </div>
         </ha-card>
@@ -375,7 +438,7 @@ export class ApplianceCard extends LitElement {
               : ''}
             <div class="timer-section">
               ${this._renderSecondaryIcons()}
-              ${this.config.appliance_type === 'coffee_maker' && !this.config.time_entity
+              ${(this.config.appliance_type === 'coffee_maker' || this.config.appliance_type === 'kettle') && !this.config.time_entity && !this.config.time_template
                 ? ''
                 : html`<div class="timer-row">
                     <div class="time-bg">88:88:88</div>

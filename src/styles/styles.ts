@@ -88,6 +88,10 @@ export const styles = css`
     left: 10px;
     color: var(--accent-color, #ff9800);
   }
+  .microwave .time-bg,
+  .microwave .time-fg {
+    font-size: clamp(32px, 6.5vw, 42px);
+  }
 
   .temp-row {
     font-family: 'segment7', monospace;
@@ -148,6 +152,42 @@ export const styles = css`
     border-radius: 4px;
     box-sizing: border-box;
     pointer-events: none;
+    animation: door-open-pulse 2s ease-in-out infinite;
+  }
+  .breville-mode-icon {
+    position: absolute;
+    left: 36%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14%;
+    max-width: 72px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    opacity: 0.45;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+  }
+  .breville-mode-icon.active {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px var(--accent-color, #ff9800));
+  }
+  .breville-mode-icon img {
+    width: 100%;
+    height: auto;
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+  }
+  .breville-mode {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #fff;
+    text-transform: capitalize;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 1px 3px #000;
   }
   .breville-readout {
     position: absolute;
@@ -157,21 +197,72 @@ export const styles = css`
     transform: translateY(-50%);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    max-width: 55%;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    max-width: 58%;
     color: #fff;
     text-shadow: 0 1px 3px #000;
   }
-  .breville-status { font-size: clamp(18px, 4vw, 26px); font-weight: 700; }
-  .breville-mode { color: #eee; text-transform: capitalize; }
-  .breville-door-warning { color: #ffb74d; font-weight: 700; }
-  .breville-temperature { display: flex; flex-wrap: wrap; gap: 8px 16px; font-variant-numeric: tabular-nums; }
-  .breville-time { color: var(--accent-color, #ffb74d); font-variant-numeric: tabular-nums; }
+  .breville-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .breville-status {
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .breville-door-warning {
+    font-size: 0.8em;
+    color: #ffb74d;
+    font-weight: 700;
+    background: rgba(255, 82, 82, 0.22);
+    border: 1px solid rgba(255, 82, 82, 0.55);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .breville-temperature {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .breville-temp-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .breville-temp-label {
+    font-size: 0.65em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--secondary-text-color, #aaa);
+  }
+  .breville-temp-row {
+    font-size: clamp(24px, 5vw, 32px);
+    margin-bottom: 0;
+    padding: 2px 8px;
+  }
+  .breville-time .timer-row {
+    margin-bottom: 0;
+  }
+  .breville-time .time-bg,
+  .breville-time .time-fg {
+    font-size: clamp(28px, 6vw, 38px);
+  }
   @media (max-width: 420px) {
-    .breville-oven { min-height: 150px; }
-    .breville-artwork { max-width: 38%; height: 65%; }
-    .breville-readout { right: 3%; max-width: 60%; gap: 5px; font-size: 0.9em; }
+    .breville-oven { min-height: 165px; }
+    .breville-artwork { max-width: 36%; height: 65%; }
+    .breville-readout { right: 3%; max-width: 62%; gap: 4px; font-size: 0.9em; }
   }
 
   /* Refrigerator Styles */
@@ -360,6 +451,17 @@ export const styles = css`
     background: rgba(255, 82, 82, 0.25);
     border: 1px solid rgba(255, 82, 82, 0.7);
     box-shadow: 0 0 8px rgba(255, 82, 82, 0.3);
+    animation: door-open-pulse 2s ease-in-out infinite;
+  }
+  @keyframes door-open-pulse {
+    0%, 100% {
+      background: rgba(255, 82, 82, 0.16);
+      box-shadow: 0 0 6px rgba(255, 82, 82, 0.25);
+    }
+    50% {
+      background: rgba(255, 82, 82, 0.36);
+      box-shadow: 0 0 16px rgba(255, 82, 82, 0.65);
+    }
   }
   .refrigerator .door-overlay {
     left: 0;
@@ -688,6 +790,10 @@ export const styles = css`
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    aspect-ratio: 1 / 1;
+    height: 100%;
+    max-width: 100%;
+    place-self: center;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.4);
     transition: all 0.4s ease;
@@ -820,7 +926,7 @@ export const styles = css`
   }
 
   /* Modern Tooltip Styling */
-  [data-tooltip]:not(.door-overlay):not(.burner-sync-badge) {
+  [data-tooltip]:not(.door-overlay):not(.burner-sync-badge):not(.breville-mode-icon) {
     position: relative;
   }
   [data-tooltip] {

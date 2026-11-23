@@ -12,6 +12,7 @@
       font-weight: normal;
       font-style: normal;
       font-display: swap;
+      size-adjust: 68%;
     }
 
     :root {
@@ -374,6 +375,9 @@
             <pre id="yaml-code"></pre>
           </div>
         </div>
+        <p style="margin:0.9rem 0 0;font-size:0.84rem;color:var(--muted);">
+          <strong>Note:</strong> These previews use simulated states and standalone element shims for demonstration purposes. Icons, fonts, and theme styling will render with full fidelity inside Home Assistant.
+        </p>
       </div>
     </section>
 
@@ -481,6 +485,7 @@
           machine_state_entity: 'sensor.washer_machine_state',
           job_state_entity: 'sensor.washer_job_state',
           time_entity: 'sensor.washer_completion_time',
+          alarm_code_entity: 'sensor.washer_alarm_code',
           wifi_entity: 'binary_sensor.washer_wifi',
           lock_entity: 'binary_sensor.washer_child_lock'
         },
@@ -490,6 +495,7 @@
             'sensor.washer_machine_state': { state: 'run', attributes: {} },
             'sensor.washer_job_state': { state: 'wash', attributes: {} },
             'sensor.washer_completion_time': { state: futureIso(42), attributes: {} },
+            'sensor.washer_alarm_code': { state: 'none', attributes: {} },
             'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
             'binary_sensor.washer_child_lock': { state: 'off', attributes: {} }
           },
@@ -498,14 +504,25 @@
             'sensor.washer_machine_state': { state: 'run', attributes: {} },
             'sensor.washer_job_state': { state: 'spin', attributes: {} },
             'sensor.washer_completion_time': { state: futureIso(8), attributes: {} },
+            'sensor.washer_alarm_code': { state: 'none', attributes: {} },
             'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
             'binary_sensor.washer_child_lock': { state: 'on', attributes: {} }
+          },
+          'Alert (Drain 5C)': {
+            'switch.washer_power': { state: 'on', attributes: {} },
+            'sensor.washer_machine_state': { state: 'pause', attributes: {} },
+            'sensor.washer_job_state': { state: 'wash', attributes: {} },
+            'sensor.washer_completion_time': { state: futureIso(15), attributes: {} },
+            'sensor.washer_alarm_code': { state: '5C', attributes: {} },
+            'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
+            'binary_sensor.washer_child_lock': { state: 'off', attributes: {} }
           },
           Idle: {
             'switch.washer_power': { state: 'off', attributes: {} },
             'sensor.washer_machine_state': { state: 'stop', attributes: {} },
             'sensor.washer_job_state': { state: 'none', attributes: {} },
             'sensor.washer_completion_time': { state: 'unavailable', attributes: {} },
+            'sensor.washer_alarm_code': { state: 'none', attributes: {} },
             'binary_sensor.washer_wifi': { state: 'on', attributes: {} },
             'binary_sensor.washer_child_lock': { state: 'off', attributes: {} }
           }
@@ -546,20 +563,30 @@
           power_entity: 'switch.dishwasher_power',
           machine_state_entity: 'sensor.dishwasher_machine_state',
           job_state_entity: 'sensor.dishwasher_job_state',
-          time_entity: 'sensor.dishwasher_completion_time'
+          time_entity: 'sensor.dishwasher_completion_time',
+          alarm_code_entity: 'sensor.dishwasher_alarm_code'
         },
         states: {
           Washing: {
             'switch.dishwasher_power': { state: 'on', attributes: {} },
             'sensor.dishwasher_machine_state': { state: 'run', attributes: {} },
             'sensor.dishwasher_job_state': { state: 'wash', attributes: {} },
-            'sensor.dishwasher_completion_time': { state: futureIso(75), attributes: {} }
+            'sensor.dishwasher_completion_time': { state: futureIso(75), attributes: {} },
+            'sensor.dishwasher_alarm_code': { state: 'none', attributes: {} }
           },
           Drying: {
             'switch.dishwasher_power': { state: 'on', attributes: {} },
             'sensor.dishwasher_machine_state': { state: 'run', attributes: {} },
             'sensor.dishwasher_job_state': { state: 'dry', attributes: {} },
-            'sensor.dishwasher_completion_time': { state: futureIso(18), attributes: {} }
+            'sensor.dishwasher_completion_time': { state: futureIso(18), attributes: {} },
+            'sensor.dishwasher_alarm_code': { state: 'none', attributes: {} }
+          },
+          'Alert (Leak LC)': {
+            'switch.dishwasher_power': { state: 'on', attributes: {} },
+            'sensor.dishwasher_machine_state': { state: 'pause', attributes: {} },
+            'sensor.dishwasher_job_state': { state: 'wash', attributes: {} },
+            'sensor.dishwasher_completion_time': { state: futureIso(40), attributes: {} },
+            'sensor.dishwasher_alarm_code': { state: 'LC', attributes: {} }
           }
         }
       },
@@ -637,6 +664,14 @@
           door_entity: 'binary_sensor.breville_oven_door'
         },
         states: {
+          Cooking: {
+            'sensor.breville_oven_status': { state: 'cooking', attributes: {} },
+            'sensor.breville_oven_temperature': { state: '400', attributes: { unit_of_measurement: '°F' } },
+            'number.breville_oven_target_temperature': { state: '400', attributes: { unit_of_measurement: '°F' } },
+            'sensor.breville_oven_active_mode': { state: 'air_fry', attributes: {} },
+            'sensor.breville_oven_time_remaining': { state: '14', attributes: { unit_of_measurement: 'min' } },
+            'binary_sensor.breville_oven_door': { state: 'off', attributes: {} }
+          },
           'Cooking + Door Open': {
             'sensor.breville_oven_status': { state: 'cooking', attributes: {} },
             'sensor.breville_oven_temperature': { state: '375', attributes: { unit_of_measurement: '°F' } },
@@ -718,16 +753,24 @@
           appliance_type: 'coffee_maker',
           power_entity: 'switch.coffee_power',
           machine_state_entity: 'sensor.coffee_status',
+          alarm_code_entity: 'sensor.coffee_blocking_alarms',
           stage_map: { Off: 'idle', Brewing: 'coffee' }
         },
         states: {
           Brewing: {
             'switch.coffee_power': { state: 'on', attributes: {} },
-            'sensor.coffee_status': { state: 'Brewing', attributes: {} }
+            'sensor.coffee_status': { state: 'Brewing', attributes: {} },
+            'sensor.coffee_blocking_alarms': { state: '0', attributes: {} }
           },
           Ready: {
             'switch.coffee_power': { state: 'on', attributes: {} },
-            'sensor.coffee_status': { state: 'Ready', attributes: {} }
+            'sensor.coffee_status': { state: 'Ready', attributes: {} },
+            'sensor.coffee_blocking_alarms': { state: '0', attributes: {} }
+          },
+          'Alert (Water Supply)': {
+            'switch.coffee_power': { state: 'on', attributes: {} },
+            'sensor.coffee_status': { state: 'Ready', attributes: {} },
+            'sensor.coffee_blocking_alarms': { state: 'H2O SUPPLY', attributes: {} }
           }
         }
       }
