@@ -126,6 +126,12 @@ export class ApplianceCardEditor extends LitElement {
       },
     ];
 
+    const brevilleSchema = [
+      { name: 'breville_status_entity', label: 'Oven Status Entity (Optional)', selector: getEntitySelector('sensor') },
+      { name: 'target_temperature_entity', label: 'Target Temperature Entity (Optional)', selector: getEntitySelector(['sensor', 'number']) },
+      { name: 'door_entity', label: 'Door Sensor (Optional)', selector: getEntitySelector('binary_sensor') },
+    ];
+
     const commonApplianceSchema = [
       {
         name: 'mode_entity',
@@ -274,6 +280,7 @@ export class ApplianceCardEditor extends LitElement {
       finalSchema = finalSchema.concat(commonApplianceSchema).concat(secondaryIconsSchema).concat(microwaveSchema);
     } else {
       finalSchema = finalSchema.concat(commonApplianceSchema).concat(secondaryIconsSchema);
+      if (this._config?.appliance_type === 'oven') finalSchema = finalSchema.concat(brevilleSchema);
     }
 
     return finalSchema.concat(footerSchema);
@@ -394,6 +401,17 @@ export class ApplianceCardEditor extends LitElement {
         return matchesSuffix && matchesDomain;
       });
     };
+
+    // Breville+ oven entities are mapped explicitly and only when this device exposes the oven status entity.
+    const isBrevilleOven = deviceEntities.some(id => /\.breville_oven_status$/.test(id));
+    if (type === 'oven' && isBrevilleOven) {
+      newConfig.breville_status_entity = newConfig.breville_status_entity || findEntity(['_oven_status'], 'sensor');
+      newConfig.temperature_entity = newConfig.temperature_entity || findEntity(['_oven_temperature'], 'sensor');
+      newConfig.target_temperature_entity = newConfig.target_temperature_entity || findEntity(['_oven_target_temperature'], 'number');
+      newConfig.mode_entity = newConfig.mode_entity || findEntity(['_oven_active_mode'], 'sensor');
+      newConfig.door_entity = newConfig.door_entity || findEntity(['_oven_door'], 'binary_sensor');
+      newConfig.time_entity = newConfig.time_entity || findEntity(['_oven_time_remaining'], 'sensor');
+    }
 
     // 3. Autofill logic supporting SmartThings, LocalThings, SmartThinQ Sensors, LG ThinQ, GE/Café, Home Connect, and Govee
     newConfig.power_entity = newConfig.power_entity || findEntity(['_cooktop_status'], 'binary_sensor') || findEntity(['_switch', '_power', '_power_switch', '_oven'], 'water_heater') || findEntity(['_switch', '_power', '_power_switch'], 'switch') || findEntity(['_power', '_state'], 'binary_sensor');

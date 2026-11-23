@@ -99,7 +99,24 @@ For manual YAML configuration:
 | `burner_<position>_sync_entity` | string | **Optional** | Binary sensor for burner synchronization. |
 | `sabbath_mode_entity` | string | **Optional** | Switch or binary sensor for Sabbath mode. |
 
-### Template & Virtual Appliance Options
+### Breville+ Smart Oven (Read Only)
+
+The existing `oven` appliance type supports an optional read-only Breville+ profile. Select the Breville oven device in the editor to map its `breville_cooking` entities automatically, or configure it explicitly:
+
+```yaml
+type: custom:appliance-card
+appliance_type: oven
+breville_status_entity: sensor.breville_oven_status
+temperature_entity: sensor.breville_oven_temperature
+target_temperature_entity: number.breville_oven_target_temperature
+mode_entity: sensor.breville_oven_active_mode
+time_entity: sensor.breville_oven_time_remaining
+door_entity: binary_sensor.breville_oven_door
+```
+
+The profile displays the integration's status, active mode, actual and target temperature, remaining time, and an open-door warning. Unknown or unavailable readings are not presented as live values. It does not expose oven control services; use the Breville+ integration panel for operation. The status entity is mapped only for a device that exposes `sensor.*_breville_oven_status`, so a Breville sous vide device is not selected as an oven.
+
+## Template & Virtual Appliance Options
 | Name | Type | Requirement | Description |
 | --- | --- | --- | --- |
 | `stage_map` | object | **Optional** | Key-value mapping from custom sensor state strings to card stages (e.g. `soaking: wash`). |

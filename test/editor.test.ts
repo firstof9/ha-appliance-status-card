@@ -314,6 +314,47 @@ describe('ApplianceCardEditor with LocalThings', () => {
     expect(autofilled.door_entities).toEqual(['binary_sensor.kitchen_refrigerator_door']);
   });
 
+  it('should select Breville oven entities without matching a sous vide device', () => {
+    const editor = document.createElement('smartthings-card-editor') as ApplianceCardEditor;
+    editor.hass = {
+      ...mockHass,
+      entities: {
+        'sensor.breville_oven_status': { device_id: 'dev_breville' },
+        'sensor.breville_oven_temperature': { device_id: 'dev_breville' },
+        'number.breville_oven_target_temperature': { device_id: 'dev_breville' },
+        'sensor.breville_oven_time_remaining': { device_id: 'dev_breville' },
+        'sensor.breville_oven_active_mode': { device_id: 'dev_breville' },
+        'binary_sensor.breville_oven_door': { device_id: 'dev_breville' },
+        'sensor.sous_vide_status': { device_id: 'dev_sous_vide' },
+      },
+      states: {
+        ...mockHass.states,
+        'sensor.breville_oven_status': { state: 'preheating', attributes: { friendly_name: 'Oven Status' } },
+        'sensor.breville_oven_temperature': { state: '100', attributes: { unit_of_measurement: '°F' } },
+        'number.breville_oven_target_temperature': { state: '350', attributes: { unit_of_measurement: '°F' } },
+        'sensor.breville_oven_time_remaining': { state: '12', attributes: { unit_of_measurement: 'min' } },
+        'sensor.breville_oven_active_mode': { state: 'bake', attributes: {} },
+        'binary_sensor.breville_oven_door': { state: 'on', attributes: {} },
+        'sensor.sous_vide_status': { state: 'cooking', attributes: { friendly_name: 'Sous Vide Status' } },
+      },
+    } as any;
+    const autofilled = (editor as any)._autofillConfig({ type: 'custom:appliance-card', device_id: 'dev_breville' });
+    expect(autofilled.appliance_type).toBe('oven');
+    expect(autofilled.breville_status_entity).toBe('sensor.breville_oven_status');
+    expect(autofilled.temperature_entity).toBe('sensor.breville_oven_temperature');
+    expect(autofilled.target_temperature_entity).toBe('number.breville_oven_target_temperature');
+    expect(autofilled.door_entity).toBe('binary_sensor.breville_oven_door');
+  });
+
+  it('shows Breville setup fields before configuration without duplicating shared fields', () => {
+    const editor = document.createElement('smartthings-card-editor') as any;
+    editor._config = { type: 'custom:appliance-card', appliance_type: 'oven' };
+    const names = editor._schema().map((field: any) => field.name);
+    expect(names).toContain('breville_status_entity');
+    expect(names.filter((name: string) => name === 'mode_entity')).toHaveLength(1);
+    expect(names.filter((name: string) => name === 'time_entity')).toHaveLength(1);
+  });
+
   it('should autofill Bosch Home Connect dishwasher entities', () => {
     const editor = document.createElement('smartthings-card-editor') as ApplianceCardEditor;
     const homeConnectHass = {

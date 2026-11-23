@@ -121,6 +121,59 @@ export const styles = css`
     opacity: 0.7;
   }
 
+  /* The overlay is relative to the rendered artwork, not the card width. */
+  .breville-artwork {
+    position: absolute;
+    left: 4%;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 75%;
+    aspect-ratio: 535 / 661;
+    max-width: 45%;
+    z-index: 2;
+  }
+  .breville-oven .breville-artwork .appliance-img {
+    position: static;
+    transform: none;
+    height: 100%;
+    width: 100%;
+    max-width: none;
+    object-fit: fill;
+  }
+  .breville-door-overlay {
+    position: absolute;
+    inset: 20% 3% 15%;
+    border: 2px solid rgba(255, 82, 82, 0.85);
+    background: rgba(255, 82, 82, 0.24);
+    border-radius: 4px;
+    box-sizing: border-box;
+    pointer-events: none;
+  }
+  .breville-readout {
+    position: absolute;
+    z-index: 5;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    max-width: 55%;
+    color: #fff;
+    text-shadow: 0 1px 3px #000;
+  }
+  .breville-status { font-size: clamp(18px, 4vw, 26px); font-weight: 700; }
+  .breville-mode { color: #eee; text-transform: capitalize; }
+  .breville-door-warning { color: #ffb74d; font-weight: 700; }
+  .breville-temperature { display: flex; flex-wrap: wrap; gap: 8px 16px; font-variant-numeric: tabular-nums; }
+  .breville-time { color: var(--accent-color, #ffb74d); font-variant-numeric: tabular-nums; }
+  @media (max-width: 420px) {
+    .breville-oven { min-height: 150px; }
+    .breville-artwork { max-width: 38%; height: 65%; }
+    .breville-readout { right: 3%; max-width: 60%; gap: 5px; font-size: 0.9em; }
+  }
+
   /* Refrigerator Styles */
   .refrigerator .fridge-temp-column,
   .refrigerator .freezer-temp-column {
