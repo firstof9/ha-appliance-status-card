@@ -4,6 +4,8 @@ A custom Home Assistant card for tracking and controlling home appliances — re
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=firstof9&repository=ha-appliance-status-card&category=plugin)
 
+**[Try the Interactive Live Demo & Documentation](https://firstof9.github.io/ha-appliance-status-card/)**
+
 ![Preview](https://raw.githubusercontent.com/firstof9/ha-appliance-status-card/main/screenshots/smartthings_card.gif)
 
 > [!NOTE]
