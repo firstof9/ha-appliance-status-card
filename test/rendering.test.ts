@@ -145,6 +145,32 @@ describe('ApplianceCard rendering', () => {
     expect(tempValue?.textContent?.trim()).toBe('100');
   });
 
+  it('renders Breville status, separate current and target temperatures, and an open door warning', async () => {
+    element.setConfig({
+      type: 'custom:appliance-card', appliance_type: 'oven',
+      breville_status_entity: 'sensor.breville_oven_status',
+      temperature_entity: 'sensor.breville_oven_temperature',
+      target_temperature_entity: 'number.breville_oven_target_temperature',
+      mode_entity: 'sensor.breville_oven_active_mode',
+      door_entity: 'binary_sensor.breville_oven_door',
+      time_entity: 'sensor.breville_oven_time_remaining',
+    } as any);
+    element.hass = { ...mockHass, states: {
+      ...mockHass.states,
+      'sensor.breville_oven_status': { state: 'preheating', attributes: {} },
+      'sensor.breville_oven_temperature': { state: '100', attributes: { unit_of_measurement: '°F' } },
+      'number.breville_oven_target_temperature': { state: '350', attributes: { unit_of_measurement: '°F' } },
+      'sensor.breville_oven_active_mode': { state: 'bake', attributes: {} },
+      'binary_sensor.breville_oven_door': { state: 'on', attributes: {} },
+      'sensor.breville_oven_time_remaining': { state: '12', attributes: { unit_of_measurement: 'min' } },
+    } } as any;
+    await element.updateComplete;
+    expect(element.shadowRoot?.querySelector('.breville-status')?.textContent).toContain('Preheating');
+    expect(element.shadowRoot?.querySelector('.breville-current-temp')?.textContent).toContain('100');
+    expect(element.shadowRoot?.querySelector('.breville-target-temp')?.textContent).toContain('350');
+    expect(element.shadowRoot?.querySelector('.breville-door-warning')?.textContent).toContain('Door open');
+  });
+
   it('should render the card with refrigerator configuration and column layout', async () => {
     element.setConfig({
       type: 'custom:smartthings-card',

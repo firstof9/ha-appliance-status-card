@@ -51,6 +51,9 @@ export interface ApplianceCardConfig {
   fan_entity?: string;
   light_entity?: string;
   temperature_entity?: string;
+  breville_status_entity?: string;
+  target_temperature_entity?: string;
+  door_entity?: string;
   temperature_template?: string;
   burner_left_front_on_entity?: string;
   burner_left_rear_on_entity?: string;

@@ -11,7 +11,7 @@ A custom Home Assistant card for tracking and controlling home appliances — re
 
 ## Features
 
-- **Multi-Integration Support**: Works with SmartThings, LocalThings, Govee, GE Home (GE / Café), Bosch / Siemens Home Connect, LG ThinQ, SmartThinQ LGE Sensors, De'Longhi Coffee, and custom/template appliances.
+- **Multi-Integration Support**: Works with SmartThings, LocalThings, Govee, GE Home (GE / Café), Bosch / Siemens Home Connect, LG ThinQ, SmartThinQ LGE Sensors, De'Longhi Coffee, Breville+, and custom/template appliances.
 - **Visual Editor**: Integrated configuration GUI with automatic device entity discovery.
 - **Modern Glassmorphic UI**: Sleek, transparent design elements with vibrant accents and Home Assistant theme support.
 - **7-Segment Digital Readouts**: Authentic digital display for timers and temperatures with grey `"88"` placeholders.
@@ -31,6 +31,7 @@ A custom Home Assistant card for tracking and controlling home appliances — re
 | **LG ThinQ** | `lg_thinq` | Core Home Assistant LG ThinQ integration |
 | **SmartThinQ LGE Sensors** | `smartthinq_sensors` | Custom LG ThinQ integration |
 | **De'Longhi Coffee** | `delonghi_coffee` | De'Longhi coffee maker integration (read-only status) |
+| **Breville+** | `breville_cooking` | Breville+ smart oven integration (read-only status) |
 
 ## Installation
 
@@ -94,6 +95,23 @@ This card includes a full Visual Editor in the Home Assistant UI. Add the card, 
 | `fan_entity` | string | **Optional** | Entity ID for the microwave fan (supports slider for `fan` or `number` entities). |
 | `light_entity` | string | **Optional** | Entity ID for the microwave light toggle. |
 | `temperature_entity` | string | **Optional** | Entity ID for the cooking temperature sensor. |
+
+#### Breville+ Smart Oven (Read-Only)
+
+The existing `oven` appliance type supports an optional read-only Breville+ profile. Select the Breville oven device in the editor to map its `breville_cooking` entities automatically, or configure it explicitly:
+
+```yaml
+type: custom:appliance-card
+appliance_type: oven
+breville_status_entity: sensor.breville_oven_status
+temperature_entity: sensor.breville_oven_temperature
+target_temperature_entity: number.breville_oven_target_temperature
+mode_entity: sensor.breville_oven_active_mode
+time_entity: sensor.breville_oven_time_remaining
+door_entity: binary_sensor.breville_oven_door
+```
+
+The profile displays the integration's status, active mode, actual and target temperature, remaining time, and an open-door warning. Unknown or unavailable readings are not presented as live values. It does not expose oven control services; use the Breville+ integration panel for operation. The status entity is mapped only for a device that exposes `sensor.*_breville_oven_status`, so a Breville sous vide device is not selected as an oven.
 
 #### Cooktop
 
